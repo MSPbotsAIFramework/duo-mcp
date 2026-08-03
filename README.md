@@ -307,9 +307,23 @@ a POST (JSON-body-signed) scenario. Structural checks were also completed:
 MCP handshake, `tools/list` returning all 160 registered tools, and 401
 credential-gating with placeholder header values.
 
-**Live self-test against a real Duo account has not yet been performed** —
-no test ikey/skey/host was provided with this task (unlike prior vendor
-tasks). See Known Gaps.
+**Live self-test against a real Duo account: passed.** Using a real Admin API
+integration created in a live Duo account, three calls were made through the
+running MCP server end-to-end (real HTTP requests to
+`api-4d02a5dd.duosecurity.com`, real HMAC-SHA512 signing, real response
+parsing):
+
+- `duo_administrators_retrieve_administrators` → returned the real account
+  owner (`ryan.li@mspbots.ai`, role `Owner`, an enrolled iPhone with push
+  capability).
+- `duo_integrations_retrieve_integrations` → returned the Admin API
+  integration itself, with `integration_key` matching the ikey used to
+  authenticate — direct proof the signature was accepted by Duo.
+- `duo_users_retrieve_users` → returned `[]`. Cross-checked against the two
+  calls above (not assumed): since both other calls returned real,
+  non-empty data through the identical auth/parsing path, the empty array
+  reflects a genuinely fresh account with zero enrolled end users yet, not
+  a masked auth failure.
 
 ## API Reference
 
@@ -333,12 +347,10 @@ tasks). See Known Gaps.
   policy sections, shared-device-auth config) — each tool's docstring lists
   the top-level keys from Duo's own example payload; the full schema is in
   the linked API reference.
-- **Live functional self-test not yet performed** — no real Duo Admin API
-  credentials (ikey/skey/host) were provided with this task. The signing
-  implementation itself has been independently verified against Duo's own
-  reference client (see above), which gives strong confidence the auth
-  layer is correct, but no tool has been exercised against a live account
-  with real data yet.
+- **Live functional self-test passed** against a real Duo account (see
+  Self-Test section above) — administrators and integrations endpoints
+  returned real data; the users endpoint correctly returned an empty list
+  for this account's current (zero end-user) state.
 - Duo's own official Postman collection has two small authoring
   inconsistencies, both worked around here: (1) some path placeholders use
   `[bracket]` notation instead of Postman's `{{double-brace}}` variables —
