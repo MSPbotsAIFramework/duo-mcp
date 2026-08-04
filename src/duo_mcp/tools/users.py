@@ -8,7 +8,6 @@ from ._common import NO_TOKEN
 
 
 def register(mcp: FastMCP, client_factory: Callable[[], DuoClient | None]) -> None:
-
     @mcp.tool()
     async def duo_users_associate_group_with_user(user_id: str, group_id: str) -> str:
         """Associate Group with User.
@@ -68,44 +67,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], DuoClient | None]) -> No
         params = {"phone_id": phone_id}
         try:
             result = await client.request("POST", path, params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def duo_users_bulk_add_users(body: dict) -> str:
-        """Bulk Add Users.
-
-        API: POST /admin/v1/users/bulk_create
-
-        Args:
-            body: Required. JSON request payload sent verbatim as the signed request body. Top-level fields (from the vendor's example): `users`. See the Duo Admin API docs for this resource's exact schema.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        params = body
-        try:
-            result = await client.request("POST", "/admin/v1/users/bulk_create", params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def duo_users_bulk_restore_users_from_trash(body: dict) -> str:
-        """Bulk Restore Users from Trash.
-
-        API: POST /admin/v1/users/bulk_restore
-
-        Args:
-            body: Required. JSON request payload sent verbatim as the signed request body. Top-level fields (from the vendor's example): `user_id_list`. See the Duo Admin API docs for this resource's exact schema.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        params = body
-        try:
-            result = await client.request("POST", "/admin/v1/users/bulk_restore", params=params)
             return json.dumps(result, indent=2, default=str)
         except DuoError as e:
             return f"Error: {e}"
@@ -181,48 +142,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], DuoClient | None]) -> No
             return f"Error: {e}"
 
     @mcp.tool()
-    async def duo_users_disassocate_hardware_token_from_user(user_id: str, token_id: str) -> str:
-        """Disassocate Hardware Token from User.
-
-        API: DELETE /admin/v1/users/{user_id}/tokens/{token_id}
-
-        Args:
-            user_id: Required. Path parameter `user_id`.
-            token_id: Required. Path parameter `token_id`.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        path = f"/admin/v1/users/{user_id}/tokens/{token_id}"
-        params = {}
-        try:
-            result = await client.request("DELETE", path, params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def duo_users_disassociate_group_from_user(user_id: str, group_id: str) -> str:
-        """Disassociate Group from User.
-
-        API: DELETE /admin/v1/users/{user_id}/groups/{group_id}
-
-        Args:
-            user_id: Required. Path parameter `user_id`.
-            group_id: Required. Path parameter `group_id`.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        path = f"/admin/v1/users/{user_id}/groups/{group_id}"
-        params = {}
-        try:
-            result = await client.request("DELETE", path, params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     async def duo_users_disassociate_phone_from_user(user_id: str, phone_id: str) -> str:
         """Disassociate Phone from User.
 
@@ -288,48 +207,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], DuoClient | None]) -> No
         params = {"username": username, "aliases": aliases, "realname": realname, "email": email, "status": status, "notes": notes, "firstname": firstname, "lastname": lastname}
         try:
             result = await client.request("POST", path, params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def duo_users_retrieve_bypass_codes_by_user_id(user_id: str, limit: str | None = None, offset: str | None = None) -> str:
-        """Retrieve Bypass Codes by User ID.
-
-        API: GET /admin/v1/users/{user_id}/bypass_codes
-
-        Args:
-            user_id: Required. Path parameter `user_id`.
-            limit: Optional. The maximum number of records returned. Default: 100; Max: 500
-            offset: Optional. The offset from 0 at which to start record retrieval. When used with "limit", the handler will return "limit" records starting at the n-th record, where n is the offset. Default: 0
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        path = f"/admin/v1/users/{user_id}/bypass_codes"
-        params = {"limit": limit, "offset": offset}
-        try:
-            result = await client.request("GET", path, params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def duo_users_retrieve_desktop_authenticators_by_user_id(user_id: str) -> str:
-        """Retrieve Desktop Authenticators by User ID.
-
-        API: GET /admin/v1/users/{user_id}/desktopauthenticators
-
-        Args:
-            user_id: Required. Path parameter `user_id`.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        path = f"/admin/v1/users/{user_id}/desktopauthenticators"
-        params = {}
-        try:
-            result = await client.request("GET", path, params=params)
             return json.dumps(result, indent=2, default=str)
         except DuoError as e:
             return f"Error: {e}"
@@ -478,25 +355,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], DuoClient | None]) -> No
         params = {}
         try:
             result = await client.request("GET", path, params=params)
-            return json.dumps(result, indent=2, default=str)
-        except DuoError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def duo_users_send_multiple_users_to_trash(body: dict) -> str:
-        """Send Multiple Users to Trash.
-
-        API: POST /admin/v1/users/bulk_send_to_trash
-
-        Args:
-            body: Required. JSON request payload sent verbatim as the signed request body. Top-level fields (from the vendor's example): `user_id_list`. See the Duo Admin API docs for this resource's exact schema.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        params = body
-        try:
-            result = await client.request("POST", "/admin/v1/users/bulk_send_to_trash", params=params)
             return json.dumps(result, indent=2, default=str)
         except DuoError as e:
             return f"Error: {e}"

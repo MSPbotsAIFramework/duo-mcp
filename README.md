@@ -18,18 +18,43 @@ specifically requested), and — per an explicit follow-up scope decision — th
 
 ## Scope
 
-**160 tools** across 20 categories (Users, Groups, Phones, Tokens, WebAuthn
-Credentials, Desktop Authenticators, Bypass Codes, Integrations, Policies,
-Endpoints, Registered Devices, Passport, Administrators, Administrative
-Units, Logs, Trust Monitor, Settings, Custom Branding, Account Info, Bulk
-Operations).
+**28 tools**, trimmed down from an original 160-tool full-Admin-API build
+(2026-08-04). Duo has **no existing MSPbots integration to anchor scope
+against** — it was never previously configured in MSPbots' platform — so
+unlike other trimmed vendors in this program, "actual usage" was taken from
+the original ClickUp task's own stated requirement instead of a live API
+config: **MFA synchronization, user pre-enrollment, and enrollment
+validation**. Those 3 capabilities map to the `users` category almost
+entirely, plus the resource types a user's MFA methods reference:
 
-**No MSPbots-existing integration to anchor scope against** — Duo was not
-previously configured in MSPbots' integration platform, and the ClickUp task
-itself only asked for MFA sync / pre-enrollment / enrollment validation. Per
-explicit follow-up decision, this build covers the **entire public Admin
-API**, matching the pattern used for other large-API vendors in this
-program.
+- **MFA synchronization**: `duo_users_retrieve_users`,
+  `duo_users_retrieve_user_by_id`, `duo_users_synchronize_user_from_directory`,
+  plus per-user MFA-method listing (`retrieve_phones_by_user_id`,
+  `retrieve_hardware_tokens_by_user_id`,
+  `retrieve_web_authn_credentials_by_user_id`, `retrieve_groups_by_user_id`)
+- **User pre-enrollment**: `duo_users_create_user`, `duo_users_enroll_user`,
+  `duo_users_associate_phone_with_user` (+ `disassociate`),
+  `duo_users_associate_hardware_token_with_user`,
+  `duo_users_associate_group_with_user`, plus phone provisioning
+  (`duo_phones_create_phone`, `duo_phones_create_activation_code_via_sms`)
+- **Enrollment validation**: `duo_users_send_verification_push` +
+  `duo_users_retrieve_verification_push_response`
+
+Plus core CRUD/list for the referenced resource types themselves —
+`duo_users_modify_user`, `duo_users_delete_user`,
+`duo_users_create_bypass_codes_for_user`, `duo_phones_retrieve_phones`,
+`duo_phones_retrieve_phone_by_id`, `duo_tokens_retrieve_hardware_tokens`,
+`duo_tokens_retrieve_hardware_token_by_id`,
+`duo_webauthn_credentials_retrieve_web_authn_credentials` (+ `_by_key`),
+`duo_groups_retrieve_groups`, `duo_groups_get_group_info`.
+
+Everything else from the original 160-tool build — `Desktop
+Authenticators`, `Bypass Codes` (standalone category; the per-user variant
+under `users` was kept), `Integrations`, `Policies`, `Endpoints`,
+`Registered Devices`, `Passport`, `Administrators`, `Administrative Units`,
+`Logs`, `Trust Monitor`, `Settings`, `Custom Branding`, `Account Info`,
+`Bulk Operations` (15 categories, ~132 tools) — was removed as unrelated to
+the original task's 3 stated capabilities.
 
 **No official Duo MCP exists** — searched GitHub (`duo-mcp`, `"duosecurity"
 mcp`) and both `wyre-technology`/`MSPbotsAI` orgs before building; the only
@@ -37,10 +62,12 @@ existing "Duo + MCP" material is [Duo SSO for MCP](https://duo.com/docs/sso-oaut
 which is the reverse relationship (Duo as an identity provider *protecting*
 MCP servers), not a Duo Admin API MCP server.
 
-Source data was extracted from Duo's own official Postman collection
+Source data for the kept tools was originally extracted from Duo's own
+official Postman collection
 (`https://github.com/duosecurity/duo_postman_collection`, `duo-admin-api`
-folder — cloned locally and parsed), cross-referenced against the live
-`duo.com/docs/adminapi` documentation for required/optional parameter flags.
+folder), cross-referenced against the live `duo.com/docs/adminapi`
+documentation. If a removed category is needed later, that same source can
+be re-parsed the same way.
 
 ## Authentication
 
@@ -107,168 +134,36 @@ The 3 capabilities this task specifically named map to these tools:
 - **User pre-enrollment**: `duo_users_create_user`, `duo_users_enroll_user`
 - **Enrollment validation**: `duo_users_send_verification_push` + `duo_users_retrieve_verification_push_response`
 
-| Category | Tool | 功能 | 方法+路径 | 参数 |
+| Category | Tool | Description | Method + Path | Params |
 |---|---|---|---|---|
-| account_info | `duo_account_info_authentication_attempts_report` | Authentication Attempts Report. | GET /admin/v1/info/authentication_attempts | maxtime(可选), mintime(可选) |
-| account_info | `duo_account_info_retrieve_summary` | Retrieve Summary. | GET /admin/v1/users | username(可选), limit(可选), offset(可选) |
-| account_info | `duo_account_info_telephony_credits_used_report_copy` | Telephony Credits Used Report Copy. | GET /admin/v1/users | username(可选), limit(可选), offset(可选) |
-| account_info | `duo_account_info_users_with_authentication_attempts_report` | Users with Authentication Attempts Report. | GET /admin/v1/info/user_authentication_attempts | maxtime(可选), mintime(可选) |
-| administrative_units | `duo_administrative_units_add_administrative_unit` | Add Administrative Unit. | POST /admin/v1/administrative_units | name(必填), description(必填), restrict_by_groups(可选), restrict_by_integrations(可选), admins(可选), groups(可选), integrations(可选) |
-| administrative_units | `duo_administrative_units_add_administrator_to_administrative_unit` | Add Administrator to Administrative Unit. | POST /admin/v1/administrative_units/[admin_unit_id]/admin/[admin_id] | admin_unit_id(必填), admin_id(必填) |
-| administrative_units | `duo_administrative_units_add_group_to_administrative_unit` | Add Group to Administrative Unit. | POST /admin/v1/administrative_units/[admin_unit_id]/group/[goup_id] | admin_unit_id(必填), goup_id(必填) |
-| administrative_units | `duo_administrative_units_add_integration_to_administrative_unit` | Add Integration to Administrative Unit. | POST /admin/v1/administrative_units/[admin_unit_id]/integration/[integration_key] | admin_unit_id(必填), integration_key(必填) |
-| administrative_units | `duo_administrative_units_delete_administrative_unit` | Delete Administrative Unit. | DELETE /admin/v1/administrative_units/[admin_unit_id] | admin_unit_id(必填) |
-| administrative_units | `duo_administrative_units_modify_administrative_unit` | Modify Administrative Unit. | POST /admin/v1/administrative_units/[admin_unit_id] | admin_unit_id(必填), name(可选), description(可选), restrict_by_groups(可选), restrict_by_integrations(可选), admins(可选), groups(可选), integrations(可选) |
-| administrative_units | `duo_administrative_units_remove_administrator_from_administrative_unit` | Remove Administrator from Administrative Unit. | DELETE /admin/v1/administrative_units/[admin_unit_id]/admin/[admin_id] | admin_unit_id(必填), admin_id(必填) |
-| administrative_units | `duo_administrative_units_remove_group_from_administrative_unit` | Remove Group from Administrative Unit. | DELETE /admin/v1/administrative_units/[admin_unit_id]/group/[goup_id] | admin_unit_id(必填), goup_id(必填) |
-| administrative_units | `duo_administrative_units_remove_integration_from_administrative_unit` | Remove Integration from Administrative Unit. | DELETE /admin/v1/administrative_units/[admin_unit_id]/integration/[integration_key] | admin_unit_id(必填), integration_key(必填) |
-| administrative_units | `duo_administrative_units_retrieve_administrative_unit_details` | Retrieve Administrative Unit Details. | GET /admin/v1/administrative_units/[admin_unit_id] | admin_unit_id(必填) |
-| administrative_units | `duo_administrative_units_retrieve_administrative_units` | Retrieve Administrative Units. | GET /admin/v1/administrative_units | admin_id(可选), group_id(可选), integration_key(可选), limit(可选), offset(可选) |
-| administrators | `duo_administrators_clear_administrator_expiration` | Clear Administrator Expiration. | POST /admin/v1/admins/{admin_id}/clear_inactivity | admin_id(必填) |
-| administrators | `duo_administrators_create_activation_link_for_administrator_pending_activation` | Create Activation Link for Administrator Pending Activation. | POST /admin/v1/admins/[admin_id]/activation_link | admin_id(必填) |
-| administrators | `duo_administrators_create_administrator_activation_link` | Create Administrator Activation Link. | POST /admin/v1/admins/activations | email(必填), admin_name(可选), admin_role(可选), send_email(可选), valid_days(可选) |
-| administrators | `duo_administrators_create_administrators` | Create Administrators. | POST /admin/v1/admins | email(必填), name(必填), phone(可选), role(可选), restricted_by_admin_units(可选), send_email(可选), token_id(可选), valid_days(可选) |
-| administrators | `duo_administrators_delete_activation_link_to_administrator_pending_activation` | Delete Activation Link to Administrator Pending Activation. | DELETE /admin/v1/admins/[admin_id]/activation_link | admin_id(必填) |
-| administrators | `duo_administrators_delete_administrator` | Delete Administrator. | DELETE /admin/v1/admins/[admin_id] | admin_id(必填) |
-| administrators | `duo_administrators_delete_pending_administrator_activation` | Delete Pending Administrator Activation. | DELETE /admin/v1/admins/activations/[admin_activation_id] | admin_activation_id(必填) |
-| administrators | `duo_administrators_email_activation_link_to_administrator_pending_activation` | Email Activation Link to Administrator Pending Activation. | POST /admin/v1/admins/[admin_id]/activation_link/email | admin_id(必填) |
-| administrators | `duo_administrators_modify_admin_external_password_management_status_or_password` | Modify Admin External Password Management Status or Password. | POST /admin/v1/admins/[admin_id]/password_mgmt | admin_id(必填), has_external_password_mgmt(可选), password(可选) |
-| administrators | `duo_administrators_modify_administrator` | Modify Administrator. | POST /admin/v1/admins/[admin_id] | admin_id(必填), name(可选), phone(可选), password_change_required(可选), role(可选), restricted_by_admin_units(可选), status(可选), token_id(可选) |
-| administrators | `duo_administrators_reset_administrator_authentication_attempts` | Reset Administrator Authentication Attempts. | POST /admin/v1/admins/[admin_id]/reset | admin_id(必填) |
-| administrators | `duo_administrators_restrict_administrator_authentication_factors` | Restrict Administrator Authentication Factors. | POST /admin/v1/admins/allowed_auth_methods | hardware_token_enabled(可选), mobile_otp_enabled(可选), push_enabled(可选), sms_enabled(可选), voice_enabled(可选), yubikey_enabled(可选) |
-| administrators | `duo_administrators_retrieve_admin_external_password_management_status` | Retrieve Admin External Password Management Status. | GET /admin/v1/admins/password_mgmt | limit(可选), offset(可选) |
-| administrators | `duo_administrators_retrieve_admin_external_password_management_status_by_id` | Retrieve Admin External Password Management Status by ID. | GET /admin/v1/admins/[admin_id]/password_mgmt | admin_id(必填) |
-| administrators | `duo_administrators_retrieve_administrator_authentication_factors` | Retrieve Administrator Authentication Factors. | GET /admin/v1/admins/allowed_auth_methods | 无 |
-| administrators | `duo_administrators_retrieve_administrator_by_id` | Retrieve Administrator by ID. | GET /admin/v1/admins/[admin_id] | admin_id(必填) |
-| administrators | `duo_administrators_retrieve_administrators` | Retrieve Administrators. | GET /admin/v1/admins | limit(可选), offset(可选) |
-| administrators | `duo_administrators_retrieve_pending_administrator_activation` | Retrieve Pending Administrator Activation. | GET /admin/v1/admins/activations | limit(可选), offset(可选) |
-| administrators | `duo_administrators_sync_admin_from_directory` | Sync Admin from directory. | POST /admin/v1/admins/directorysync/{directory_key}/syncadmin | directory_key(必填), email(必填) |
-| bulk_operations | `duo_bulk_operations_bulk_user_operations` | Bulk User Operations. | POST /admin/v1/bulk | body(必填) |
-| bypass_codes | `duo_bypass_codes_create_bypass_codes_for_user` | Create Bypass Codes for User. | POST /admin/v1/users/{user_id}/bypass_codes | user_id(必填), count(可选), codes(可选), reuse_count(可选), valid_secs(可选) |
-| bypass_codes | `duo_bypass_codes_delete_bypass_code` | Delete Bypass Code. | DELETE /admin/v1/bypass_codes/[bypass_code_id] | bypass_code_id(必填) |
-| bypass_codes | `duo_bypass_codes_retrieve_bypass_codes_by_id` | Retrieve Bypass Codes by ID. | GET /admin/v1/bypass_codes/{bypass_code_id} | bypass_code_id(必填) |
-| bypass_codes | `duo_bypass_codes_retrieve_bypass_codes_by_user_id` | Retrieve Bypass Codes by User ID. | GET /admin/v1/users/[user_id]/bypass_codes | user_id(必填), limit(可选), offset(可选) |
-| bypass_codes | `duo_bypass_codes_retrive_bypass_codes` | Retrive Bypass Codes. | GET /admin/v1/bypass_codes | limit(可选), offset(可选) |
-| custom_branding | `duo_custom_branding_add_draft_custom_branding_user_by_id` | Add Draft Custom Branding User by ID. | POST /admin/v1/branding/draft/users/{user_id} | user_id(必填) |
-| custom_branding | `duo_custom_branding_modify_custom_messaging` | Modify Custom Messaging. | POST /admin/v1/branding/custom_messaging | 无 |
-| custom_branding | `duo_custom_branding_modify_draft_custom_branding` | Modify Draft Custom Branding. | POST /admin/v1/branding/draft | 无 |
-| custom_branding | `duo_custom_branding_modify_live_custom_branding` | Modify Live Custom Branding. | POST /admin/v1/branding | 无 |
-| custom_branding | `duo_custom_branding_publish_draft_custom_branding` | Publish Draft Custom Branding. | POST /admin/v1/branding/draft/publish | 无 |
-| custom_branding | `duo_custom_branding_retrieve_custom_messaging` | Retrieve Custom Messaging. | GET /admin/v1/branding/custom_messaging | 无 |
-| custom_branding | `duo_custom_branding_retrieve_draft_custom_branding` | Retrieve Draft Custom Branding. | GET /admin/v1/branding/draft | 无 |
-| custom_branding | `duo_custom_branding_retrieve_live_custom_branding` | Retrieve Live Custom Branding. | GET /admin/v1/branding | 无 |
-| desktop_authenticators | `duo_desktop_authenticators_create_shared_device_authentication_configuration` | Create Shared Device Authentication Configuration. | POST /admin/v1/desktop_authenticators/shared_device_auth | body(必填) |
-| desktop_authenticators | `duo_desktop_authenticators_delete_desktop_authenticator` | Delete Desktop Authenticator. | DELETE /admin/v1/desktop_authenticators/{dakey} | dakey(必填) |
-| desktop_authenticators | `duo_desktop_authenticators_retrieve_desktop_authenticator_by_id` | Retrieve Desktop Authenticator by ID. | GET /admin/v1/desktop_authenticators/{dakey} | dakey(必填) |
-| desktop_authenticators | `duo_desktop_authenticators_retrieve_desktop_authenticators` | Retrieve Desktop Authenticators. | GET /admin/v1/desktop_authenticators | limit(可选), offset(可选) |
-| desktop_authenticators | `duo_desktop_authenticators_retrieve_shared_device_authentication_configuration_by_key` | Retrieve Shared Device Authentication Configuration by Key. | GET /admin/v1/desktop_authenticators/shared_device_auth/{shared_device_key} | shared_device_key(必填) |
-| desktop_authenticators | `duo_desktop_authenticators_retrieve_shared_device_authentication_configurations` | Retrieve Shared Device Authentication Configurations. | GET /admin/v1/desktop_authenticators/shared_device_auth | limit(可选), offset(可选) |
-| desktop_authenticators | `duo_desktop_authenticators_update_shared_device_authentication_configuration` | Update Shared Device Authentication Configuration. | PUT /admin/v1/desktop_authenticators/shared_device_auth/{shared_device_key} | shared_device_key(必填), body(必填) |
-| desktop_authenticators | `duo_desktop_authenticators_update_shared_device_authentication_configuration_copy` | Update Shared Device Authentication Configuration Copy. | DELETE /admin/v1/desktop_authenticators/shared_device_auth/{shared_device_key} | shared_device_key(必填) |
-| endpoints | `duo_endpoints_retrieve_endpoints` | Retrieve Endpoints. | GET /admin/v1/endpoints | limit(可选), offset(可选) |
-| endpoints | `duo_endpoints_retrieve_endpoints_by_id` | Retrieve Endpoints by ID. | GET /admin/v1/endpoints/[epkey] | epkey(必填) |
-| groups | `duo_groups_associate_group_with_user` | Associate Group with User. | POST /admin/v1/users/{user_id}/groups | user_id(必填), group_id(必填) |
-| groups | `duo_groups_create_group` | Create Group. | POST /admin/v1/groups | name(必填), desc(可选), status(可选) |
-| groups | `duo_groups_delete_group` | Delete Group. | DELETE /admin/v1/groups/{group_id} | group_id(必填) |
-| groups | `duo_groups_disassociate_group_from_user` | Disassociate Group from User. | DELETE /admin/v1/users/{user_id}/groups/{group_id} | user_id(必填), group_id(必填) |
-| groups | `duo_groups_get_group_info` | Get Group Info. | GET /admin/v2/groups/{group_id} | group_id(必填) |
-| groups | `duo_groups_get_group_members` | Get Group Members. | GET /admin/v2/groups/{group_id}/users | group_id(必填) |
-| groups | `duo_groups_retrieve_groups` | Retrieve Groups. | GET /admin/v1/groups | limit(可选), offset(可选) |
-| groups | `duo_groups_retrieve_groups_by_user_id` | Retrieve Groups by User ID. | GET /admin/v1/users/{user_id}/groups | user_id(必填), limit(可选), offset(可选) |
-| groups | `duo_groups_update_group` | Update Group. | POST /admin/v1/groups/{group_id} | group_id(必填), name(可选), desc(可选), status(可选) |
-| integrations | `duo_integrations_create_integration_v3` | Create Integration (v3). | POST /admin/v3/integrations | body(必填) |
-| integrations | `duo_integrations_create_integrations_legacy` | Create Integrations (legacy). | POST /admin/v1/integrations | name(必填), type(必填), adminapi_admins(可选), adminapi_info(可选), adminapi_integrations(可选), adminapi_read_log(可选), adminapi_read_resource(可选), adminapi_settings(可选), adminapi_write_resource(可选), enroll_policy(可选), greeting(可选), groups_allowed(可选), ip_whitelist(可选), networks_for_api_access(可选), notes(可选), trusted_device_days(可选), self_service_allowed(可选), username_normalization_policy(可选) |
-| integrations | `duo_integrations_create_sso_integration` | Create SSO Integration. | POST /admin/v2/integrations | body(必填) |
-| integrations | `duo_integrations_delete_integration` | Delete Integration. | DELETE /admin/v2/integrations/{integration_key} | integration_key(必填) |
-| integrations | `duo_integrations_modify_integration` | Modify Integration. | POST /admin/v2/integrations/[integration_key] | integration_key(必填), name(可选), networks_for_api_access(可选), adminapi_admins(可选), adminapi_info(可选), adminapi_integrations(可选), adminapi_read_log(可选), adminapi_read_resource(可选), adminapi_settings(可选), adminapi_write_resource(可选), trusted_device_days(可选), enroll_policy(可选), greeting(可选), groups_allowed(可选), ip_whitelist(可选), ip_whitelist_enroll_policy(可选), policy_key(可选), reset_secret_key(可选), self_service_allowed(可选), username_normalization_policy(可选) |
-| integrations | `duo_integrations_modify_sso_integration` | Modify SSO Integration. | POST /admin/v2/integrations/{integration_key} | integration_key(必填), body(必填) |
-| integrations | `duo_integrations_reset_oauth_client_secret` | Reset OAUTH client secret. | POST /admin/v2/integrations/oauth_cc/{integration_key}/client_secret/{client_id} | integration_key(必填), client_id(必填) |
-| integrations | `duo_integrations_reset_oidc_client_secret` | Reset OIDC client secret. | POST /admin/v2/integrations/oidc/{integration_key}/client_secret | integration_key(必填) |
-| integrations | `duo_integrations_retrieve_integration_by_integration_key` | Retrieve Integration by Integration Key. | GET /admin/v2/integrations/{integration_key} | integration_key(必填) |
-| integrations | `duo_integrations_retrieve_integrations` | Retrieve Integrations. | GET /admin/v2/integrations | limit(可选), offset(可选) |
-| integrations | `duo_integrations_retrieve_oauth_client_secret` | Retrieve OAUTH client secret. | GET /admin/v2/integrations/oauth_cc/{integration_key}/client_secret/{client_id} | integration_key(必填), client_id(必填) |
-| integrations | `duo_integrations_retrieve_oidc_client_secret` | Retrieve OIDC client secret. | GET /admin/v2/integrations/oidc/{integration_key}/client_secret | integration_key(必填) |
-| integrations | `duo_integrations_retrieve_secret_key` | Retrieve secret key. | GET /admin/v1/integrations/{integration_key}/skey | integration_key(必填) |
-| logs | `duo_logs_activity_logs` | Activity Logs. | GET /admin/v2/logs/activity | mintime(必填), maxtime(必填), limit(可选), next_offset(可选), sort(可选) |
-| logs | `duo_logs_administrator_logs` | Administrator Logs. | GET /admin/v1/logs/administrator | mintime(可选) |
-| logs | `duo_logs_authentication_logs` | Authentication Logs. | GET /admin/v2/logs/authentication | mintime(必填), maxtime(必填), limit(可选), next_offset(可选), sort(可选), applications(可选), users(可选), event_types(可选), factors(可选), groups(可选), phone_numbers(可选), reasons(可选), results(可选), registration_id(可选), token_id(可选), webauthnkey(可选) |
-| logs | `duo_logs_authentication_logs_legacy_v1` | Authentication Logs (Legacy v1). | GET /admin/v1/logs/authentication | mintime(可选) |
-| logs | `duo_logs_offline_enrollment_logs` | Offline Enrollment Logs. | GET /admin/v1/logs/offline_enrollment | mintime(可选) |
-| logs | `duo_logs_telephony_logs` | Telephony Logs. | GET /admin/v1/logs/telephony | mintime(可选) |
-| logs | `duo_logs_telephony_logs_v2` | Telephony Logs (v2). | GET /admin/v2/logs/telephony | mintime(必填), maxtime(必填) |
-| passport | `duo_passport_get_configuration` | Get Configuration. | GET /admin/v2/passport/config | 无 |
-| passport | `duo_passport_modify_configuration` | Modify Configuration. | POST /admin/v2/passport/config | body(必填) |
-| phones | `duo_phones_associate_phone_with_user` | Associate Phone with User. | POST /admin/v1/users/{user_id}/phones | user_id(必填), phone_id(必填) |
-| phones | `duo_phones_create_activation_code` | Create Activation Code. | POST /admin/v1/phones/{phone_id}/activation_url | phone_id(必填), valid_secs(可选), install(可选) |
-| phones | `duo_phones_create_activation_code_via_sms` | Create Activation Code via SMS. | POST /admin/v1/phones/{phone_id}/send_sms_activation | phone_id(必填), valid_secs(可选), install(可选), installation_msg(可选), activation_msg(可选) |
-| phones | `duo_phones_create_phone` | Create Phone. | POST /admin/v1/phones | 无 |
-| phones | `duo_phones_delete_phone` | Delete Phone. | DELETE /admin/v1/phones/{phone_id} | phone_id(必填) |
-| phones | `duo_phones_disassociate_phone_from_user` | Disassociate Phone from User. | DELETE /admin/v1/users/{user_id}/phones/{phone_id} | user_id(必填), phone_id(必填) |
-| phones | `duo_phones_modify_phone` | Modify Phone. | POST /admin/v1/phones/{phone_id} | phone_id(必填), number(可选), name(可选), extension(可选), type(可选), platform(可选), predelay(可选), postdelay(可选) |
-| phones | `duo_phones_retrieve_phone_by_id` | Retrieve Phone by ID. | GET /admin/v1/phones/{phone_id} | phone_id(必填) |
-| phones | `duo_phones_retrieve_phones` | Retrieve Phones. | GET /admin/v1/phones | number(可选), extension(可选), limit(可选), offset(可选) |
-| phones | `duo_phones_retrieve_phones_by_user_id` | Retrieve Phones by User ID. | GET /admin/v1/users/{user_id}/phones | user_id(必填), limit(可选), offset(可选) |
-| phones | `duo_phones_send_installation_url_via_sms` | Send Installation URL via SMS. | POST /admin/v1/phones/{phone_id}/send_sms_installation | phone_id(必填), installation_msg(可选) |
-| phones | `duo_phones_send_passcodes_via_sms` | Send Passcodes via SMS. | POST /admin/v1/phones/{phone_id}/send_sms_passcodes | phone_id(必填) |
-| policies | `duo_policies_add_new_policy_post` | Add new policy. | POST /admin/v2/policies | body(必填) |
-| policies | `duo_policies_add_new_policy_post_policies` | Add new policy. | POST /admin/v2/policies | body(必填) |
-| policies | `duo_policies_copy_policy` | Copy Policy. | POST /admin/v2/policies/copy | body(必填) |
-| policies | `duo_policies_delete_policy` | Delete policy. | DELETE /admin/v2/policies/{policy_key} | policy_key(必填) |
-| policies | `duo_policies_get_all_policies` | Get all policies. | GET /admin/v2/policies | 无 |
-| policies | `duo_policies_get_policy_by_id` | Get policy by ID. | GET /admin/v2/policies/{policy_key} | policy_key(必填) |
-| policies | `duo_policies_resulting_policy` | Resulting policy. | GET /admin/v2/policies/calculate | user_id(必填), integration_key(必填) |
-| policies | `duo_policies_summarize_policies` | Summarize Policies. | GET /admin/v2/policies/summary | 无 |
-| policies | `duo_policies_update_policy` | Update policy. | PUT /admin/v2/policies/{policy_key} | policy_key(必填), body(必填) |
-| policies | `duo_policies_update_policy_deny_new_users` | Update policy deny new users. | PUT /admin/v2/policies/{policy_key} | policy_key(必填), body(必填) |
-| registered_devices | `duo_registered_devices_block_device_by_id` | Block Device by ID. | POST /admin/v1/registered_devices/blocked/{compkey} | compkey(必填) |
-| registered_devices | `duo_registered_devices_block_devices` | Block Devices. | POST /admin/v1/registered_devices/blocked | body(必填) |
-| registered_devices | `duo_registered_devices_delete_registered_device` | Delete Registered Device. | DELETE /admin/v1/registered_devices/{registered_device_key} | registered_device_key(必填) |
-| registered_devices | `duo_registered_devices_retrieve_blocked_devices` | Retrieve Blocked Devices. | GET /admin/v1/registered_devices/blocked | 无 |
-| registered_devices | `duo_registered_devices_retrieve_blocked_devices_by_id` | Retrieve Blocked Devices by ID. | GET /admin/v1/registered_devices/blocked/{compkey} | compkey(必填) |
-| registered_devices | `duo_registered_devices_retrieve_registered_device_by_id` | Retrieve Registered Device by ID. | GET /admin/v1/registered_devices/{registered_device_key} | registered_device_key(必填) |
-| registered_devices | `duo_registered_devices_retrieve_registered_devices` | Retrieve Registered Devices. | GET /admin/v1/registered_devices | 无 |
-| registered_devices | `duo_registered_devices_unblock_device_by_id` | Unblock Device by ID. | DELETE /admin/v1/registered_devices/blocked/{compkey} | compkey(必填) |
-| registered_devices | `duo_registered_devices_unblock_devices` | Unblock Devices. | DELETE /admin/v1/registered_devices/blocked | body(必填) |
-| settings | `duo_settings_delete_duo_mobile_logo` | Delete Duo Mobile Logo. | DELETE /admin/v1/logo | 无 |
-| settings | `duo_settings_modify_duo_mobile_logo` | Modify Duo Mobile Logo. | POST /admin/v1/logo | 无 |
-| settings | `duo_settings_modify_settings` | Modify Settings. | POST /admin/v1/settings | caller_id(可选), fraud_email(可选), fraud_email_enabled(可选), inactive_user_expiration(可选), keypress_confirm(可选), keypress_fraud(可选), language(可选), lockout_expire_duration(可选), lockout_threshold(可选), minimum_password_length(可选), mobile_otp_enabled(可选), password_requires_lower_alpha(可选), password_requires_numeric(可选), password_requires_special(可选), password_requires_upper_alpha(可选), push_enabled(可选), sms_batch(可选), sms_enabled(可选), sms_expiration(可选), sms_message(可选), sms_refresh(可选), telephony_warning_min(可选), timezone(可选), voice_enabled(可选), user_telephony_cost_max(可选), u2f_enabled(可选) |
-| settings | `duo_settings_retrieve_duo_mobile_logo` | Retrieve Duo Mobile Logo. | GET /admin/v1/logo | 无 |
-| settings | `duo_settings_retrieve_settings` | Retrieve Settings. | GET /admin/v1/settings | 无 |
-| tokens | `duo_tokens_create_hardware_token` | Create Hardware Token. | POST /admin/v1/tokens | type(必填), serial(必填), secret(可选), counter(可选), private_id(可选), aes_key(可选) |
-| tokens | `duo_tokens_delete_hardware_token` | Delete Hardware Token. | DELETE /admin/v1/tokens/{token_id} | token_id(必填) |
-| tokens | `duo_tokens_resync_hardware_token` | Resync Hardware Token. | POST /admin/v1/tokens/{token_id}/resync | token_id(必填), code1(必填), code2(必填), code3(必填) |
-| tokens | `duo_tokens_retrieve_hardware_token_by_id` | Retrieve Hardware Token by ID. | GET /admin/v1/tokens/{token_id} | token_id(必填) |
-| tokens | `duo_tokens_retrieve_hardware_tokens` | Retrieve Hardware Tokens. | GET /admin/v1/tokens | type(可选), serial(可选), limit(可选), offset(可选) |
-| trust_monitor | `duo_trust_monitor_retrieve_events` | Retrieve Events. | GET /admin/v1/trust_monitor/events | mintime(必填), maxtime(必填), limit(可选), offset(可选), type(可选) |
-| users | `duo_users_associate_group_with_user` | Associate Group with User. | POST /admin/v1/users/{user_id}/groups | user_id(必填), group_id(必填) |
-| users | `duo_users_associate_hardware_token_with_user` | Associate Hardware Token with User. | POST /admin/v1/users/{user_id}/tokens | user_id(必填), token_id(必填) |
-| users | `duo_users_associate_phone_with_user` | Associate Phone with User. | POST /admin/v1/users/{user_id}/phones | user_id(必填), phone_id(必填) |
-| users | `duo_users_bulk_add_users` | Bulk Add Users. | POST /admin/v1/users/bulk_create | body(必填) |
-| users | `duo_users_bulk_restore_users_from_trash` | Bulk Restore Users from Trash. | POST /admin/v1/users/bulk_restore | body(必填) |
-| users | `duo_users_create_bypass_codes_for_user` | Create Bypass Codes for User. | POST /admin/v1/users/{user_id}/bypass_codes | user_id(必填), count(可选), codes(可选), reuse_count(可选), valid_secs(可选) |
-| users | `duo_users_create_user` | Create User. | POST /admin/v1/users | username(必填), aliases(可选), realname(可选), email(可选), status(可选), notes(可选), firstname(可选), lastname(可选) |
-| users | `duo_users_delete_user` | Delete User. | DELETE /admin/v1/users/{user_id} | user_id(必填) |
-| users | `duo_users_disassocate_hardware_token_from_user` | Disassocate Hardware Token from User. | DELETE /admin/v1/users/{user_id}/tokens/{token_id} | user_id(必填), token_id(必填) |
-| users | `duo_users_disassociate_group_from_user` | Disassociate Group from User. | DELETE /admin/v1/users/{user_id}/groups/{group_id} | user_id(必填), group_id(必填) |
-| users | `duo_users_disassociate_phone_from_user` | Disassociate Phone from User. | DELETE /admin/v1/users/{user_id}/phones/{phone_id} | user_id(必填), phone_id(必填) |
-| users | `duo_users_enroll_user` | Enroll User. | POST /admin/v1/users/enroll | username(必填), email(必填), valid_secs(可选) |
-| users | `duo_users_modify_user` | Modify User. | POST /admin/v1/users/{user_id} | user_id(必填), username(可选), aliases(可选), realname(可选), email(可选), status(可选), notes(可选), firstname(可选), lastname(可选) |
-| users | `duo_users_retrieve_bypass_codes_by_user_id` | Retrieve Bypass Codes by User ID. | GET /admin/v1/users/{user_id}/bypass_codes | user_id(必填), limit(可选), offset(可选) |
-| users | `duo_users_retrieve_desktop_authenticators_by_user_id` | Retrieve Desktop Authenticators by User ID. | GET /admin/v1/users/{user_id}/desktopauthenticators | user_id(必填) |
-| users | `duo_users_retrieve_groups_by_user_id` | Retrieve Groups by User ID. | GET /admin/v1/users/{user_id}/groups | user_id(必填), limit(可选), offset(可选) |
-| users | `duo_users_retrieve_hardware_tokens_by_user_id` | Retrieve Hardware Tokens by User ID. | GET /admin/v1/users/{user_id}/tokens | user_id(必填), limit(可选), offset(可选) |
-| users | `duo_users_retrieve_phones_by_user_id` | Retrieve Phones by User ID. | GET /admin/v1/users/{user_id}/phones | user_id(必填), limit(可选), offset(可选) |
-| users | `duo_users_retrieve_user_by_id` | Retrieve User by ID. | GET /admin/v1/users/{user_id} | user_id(必填) |
-| users | `duo_users_retrieve_users` | Retrieve Users. | GET /admin/v1/users | username(可选), limit(可选), offset(可选) |
-| users | `duo_users_retrieve_verification_push_response` | Retrieve Verification Push Response. | GET /admin/v1/users/{user_id}/verification_push_response | user_id(必填), push_id(必填) |
-| users | `duo_users_retrieve_web_authn_credentials_by_user_id` | Retrieve WebAuthn Credentials by User ID. | GET /admin/v1/users/{user_id}/webauthncredentials | user_id(必填) |
-| users | `duo_users_send_multiple_users_to_trash` | Send Multiple Users to Trash. | POST /admin/v1/users/bulk_send_to_trash | body(必填) |
-| users | `duo_users_send_verification_push` | Send Verification Push. | POST /admin/v1/users/{user_id}/send_verification_push | user_id(必填), body(必填) |
-| users | `duo_users_synchronize_user_from_directory` | Synchronize User from Directory. | POST /admin/v1/users/directorysync/{directory_key}/syncuser | directory_key(必填), username(必填) |
-| webauthn_credentials | `duo_webauthn_credentials_delete_web_authn_credential` | Delete WebAuthn Credential. | DELETE /admin/v1/webauthncredentials/[webauthnkey] | webauthnkey(必填) |
-| webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials` | Retrieve WebAuthn Credentials. | GET /admin/v1/webauthncredentials | limit(可选), offset(可选) |
-| webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials_by_key` | Retrieve WebAuthn Credentials by Key. | GET /admin/v1/webauthncredentials/[webauthnkey] | webauthnkey(必填) |
-| webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials_by_user_id` | Retrieve WebAuthn Credentials by User ID. | GET /admin/v1/users/[user_id]/webauthncredentials | user_id(必填) |
+| groups | `duo_groups_get_group_info` | Get Group Info. | GET /admin/v2/groups/{group_id} | group_id(required) |
+| groups | `duo_groups_retrieve_groups` | Retrieve Groups. | GET /admin/v1/groups | limit(optional), offset(optional) |
+| phones | `duo_phones_create_activation_code_via_sms` | Create Activation Code via SMS. | POST /admin/v1/phones/{phone_id}/send_sms_activation | phone_id(required), valid_secs(optional), install(optional), installation_msg(optional), activation_msg(optional) |
+| phones | `duo_phones_create_phone` | Create Phone. | POST /admin/v1/phones | none |
+| phones | `duo_phones_retrieve_phone_by_id` | Retrieve Phone by ID. | GET /admin/v1/phones/{phone_id} | phone_id(required) |
+| phones | `duo_phones_retrieve_phones` | Retrieve Phones. | GET /admin/v1/phones | number(optional), extension(optional), limit(optional), offset(optional) |
+| tokens | `duo_tokens_retrieve_hardware_token_by_id` | Retrieve Hardware Token by ID. | GET /admin/v1/tokens/{token_id} | token_id(required) |
+| tokens | `duo_tokens_retrieve_hardware_tokens` | Retrieve Hardware Tokens. | GET /admin/v1/tokens | type(optional), serial(optional), limit(optional), offset(optional) |
+| users | `duo_users_associate_group_with_user` | Associate Group with User. | POST /admin/v1/users/{user_id}/groups | user_id(required), group_id(required) |
+| users | `duo_users_associate_hardware_token_with_user` | Associate Hardware Token with User. | POST /admin/v1/users/{user_id}/tokens | user_id(required), token_id(required) |
+| users | `duo_users_associate_phone_with_user` | Associate Phone with User. | POST /admin/v1/users/{user_id}/phones | user_id(required), phone_id(required) |
+| users | `duo_users_create_bypass_codes_for_user` | Create Bypass Codes for User. | POST /admin/v1/users/{user_id}/bypass_codes | user_id(required), count(optional), codes(optional), reuse_count(optional), valid_secs(optional) |
+| users | `duo_users_create_user` | Create User. | POST /admin/v1/users | username(required), aliases(optional), realname(optional), email(optional), status(optional), notes(optional), firstname(optional), lastname(optional) |
+| users | `duo_users_delete_user` | Delete User. | DELETE /admin/v1/users/{user_id} | user_id(required) |
+| users | `duo_users_disassociate_phone_from_user` | Disassociate Phone from User. | DELETE /admin/v1/users/{user_id}/phones/{phone_id} | user_id(required), phone_id(required) |
+| users | `duo_users_enroll_user` | Enroll User. | POST /admin/v1/users/enroll | username(required), email(required), valid_secs(optional) |
+| users | `duo_users_modify_user` | Modify User. | POST /admin/v1/users/{user_id} | user_id(required), username(optional), aliases(optional), realname(optional), email(optional), status(optional), notes(optional), firstname(optional), lastname(optional) |
+| users | `duo_users_retrieve_groups_by_user_id` | Retrieve Groups by User ID. | GET /admin/v1/users/{user_id}/groups | user_id(required), limit(optional), offset(optional) |
+| users | `duo_users_retrieve_hardware_tokens_by_user_id` | Retrieve Hardware Tokens by User ID. | GET /admin/v1/users/{user_id}/tokens | user_id(required), limit(optional), offset(optional) |
+| users | `duo_users_retrieve_phones_by_user_id` | Retrieve Phones by User ID. | GET /admin/v1/users/{user_id}/phones | user_id(required), limit(optional), offset(optional) |
+| users | `duo_users_retrieve_user_by_id` | Retrieve User by ID. | GET /admin/v1/users/{user_id} | user_id(required) |
+| users | `duo_users_retrieve_users` | Retrieve Users. | GET /admin/v1/users | username(optional), limit(optional), offset(optional) |
+| users | `duo_users_retrieve_verification_push_response` | Retrieve Verification Push Response. | GET /admin/v1/users/{user_id}/verification_push_response | user_id(required), push_id(required) |
+| users | `duo_users_retrieve_web_authn_credentials_by_user_id` | Retrieve WebAuthn Credentials by User ID. | GET /admin/v1/users/{user_id}/webauthncredentials | user_id(required) |
+| users | `duo_users_send_verification_push` | Send Verification Push. | POST /admin/v1/users/{user_id}/send_verification_push | user_id(required), body(required) |
+| users | `duo_users_synchronize_user_from_directory` | Synchronize User from Directory. | POST /admin/v1/users/directorysync/{directory_key}/syncuser | directory_key(required), username(required) |
+| webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials` | Retrieve WebAuthn Credentials. | GET /admin/v1/webauthncredentials | limit(optional), offset(optional) |
+| webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials_by_key` | Retrieve WebAuthn Credentials by Key. | GET /admin/v1/webauthncredentials/[webauthnkey] | webauthnkey(required) |
 
 ## 测试示例
 
@@ -333,31 +228,28 @@ parsing):
 
 ## Known Gaps
 
-- **Full API coverage was an explicit user decision** after confirming no
-  official/community Duo Admin API MCP exists and no MSPbots-existing
-  integration could anchor a narrower scope. Every `Create`/`Modify`/
-  `Delete`/`Bulk` tool mutates real Duo account configuration (users,
-  groups, phones, tokens, integrations, policies, administrators, custom
-  branding, etc.) — treat these as destructive/irreversible and confirm
-  with a human before invoking, especially anything under `administrators`
-  (could lock out real admin accounts) or `integrations`/`policies`
-  (could break production SSO/access policies).
-- **`body` parameters are untyped (`dict`)** for the ~20 endpoints with
-  nested/complex JSON payloads (bulk operations, SSO integration config,
-  policy sections, shared-device-auth config) — each tool's docstring lists
-  the top-level keys from Duo's own example payload; the full schema is in
-  the linked API reference.
-- **Live functional self-test passed** against a real Duo account (see
-  Self-Test section above) — administrators and integrations endpoints
-  returned real data; the users endpoint correctly returned an empty list
-  for this account's current (zero end-user) state.
-- Duo's own official Postman collection has two small authoring
-  inconsistencies, both worked around here: (1) some path placeholders use
-  `[bracket]` notation instead of Postman's `{{double-brace}}` variables —
-  both styles are recognized; (2) two operations (`Create Integrations
-  (legacy)`, `Modify Integration`) list the same query parameter twice
-  under one operation — deduplicated, keeping the first occurrence. One
-  operation (`Remove Draft Custom Branding User by ID`) has a malformed
-  `request` object with no `url` at all in the source collection and was
-  skipped entirely (160 usable tools + this 1 skipped = the source
-  collection's nominal 161 total).
+- **Trimmed from 160 to 28 tools on 2026-08-04.** The original build
+  covered the full public Admin API per an earlier follow-up scope
+  decision (justified at the time by there being no MSPbots-existing
+  integration to anchor a narrower scope against). A later scope decision
+  cut this back to the original ClickUp task's actual 3 stated
+  capabilities (MFA sync / pre-enrollment / enrollment validation) plus
+  minimal supporting CRUD — see the Scope section above for the exact
+  mapping and the full list of the 15 removed categories (~132 tools). If
+  a removed category is needed later, Duo's own Postman collection (linked
+  below) still documents its exact operations and they can be re-added the
+  same way the kept tools were generated.
+- Several kept tools still mutate real Duo account data
+  (`duo_users_create_user`, `duo_users_delete_user`,
+  `duo_users_enroll_user`, `duo_phones_create_phone`, etc.) — treat these
+  as **state-changing** and confirm with a human before invoking.
+- **`body` parameters are untyped (`dict`)** where a tool has a nested/
+  complex JSON payload — each such tool's docstring lists the top-level
+  keys from Duo's own example payload; the full schema is in the linked
+  API reference.
+- **Live functional self-test passed** (pre-trim) against a real Duo
+  account — administrators and integrations endpoints returned real data;
+  the users endpoint correctly returned an empty list for this account's
+  current (zero end-user) state. Not independently re-verified against the
+  live API after the trim, though the trim only removed tools/files and
+  changed no request-building logic for the ones kept.
