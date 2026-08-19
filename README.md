@@ -118,7 +118,7 @@ Missing any header returns `401`:
 ## MCP Endpoint
 
 - `POST /mcp` — MCP protocol (streamable HTTP transport)
-- `GET /health` — health check, returns `{"status": "ok", "service": "duo-mcp", "transport": "http"}`
+- `GET /health` — health check, returns `{"status": "ok"}` (local-only probe, does not call Duo)
 
 ## Tool List
 
@@ -160,7 +160,7 @@ The 3 capabilities this task specifically named map to these tools:
 | users | `duo_users_retrieve_users` | Retrieve Users. | GET /admin/v1/users | username(optional), limit(optional), offset(optional) |
 | users | `duo_users_retrieve_verification_push_response` | Retrieve Verification Push Response. | GET /admin/v1/users/{user_id}/verification_push_response | user_id(required), push_id(required) |
 | users | `duo_users_retrieve_web_authn_credentials_by_user_id` | Retrieve WebAuthn Credentials by User ID. | GET /admin/v1/users/{user_id}/webauthncredentials | user_id(required) |
-| users | `duo_users_send_verification_push` | Send Verification Push. | POST /admin/v1/users/{user_id}/send_verification_push | user_id(required), body(required) |
+| users | `duo_users_send_verification_push` | Send Verification Push. | POST /admin/v1/users/{user_id}/send_verification_push | user_id(required), phone_id(required) |
 | users | `duo_users_synchronize_user_from_directory` | Synchronize User from Directory. | POST /admin/v1/users/directorysync/{directory_key}/syncuser | directory_key(required), username(required) |
 | webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials` | Retrieve WebAuthn Credentials. | GET /admin/v1/webauthncredentials | limit(optional), offset(optional) |
 | webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials_by_key` | Retrieve WebAuthn Credentials by Key. | GET /admin/v1/webauthncredentials/[webauthnkey] | webauthnkey(required) |

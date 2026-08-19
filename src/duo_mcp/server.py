@@ -83,6 +83,35 @@ def create_mcp_server(settings: Settings) -> FastMCP:
     # correctly behind a reverse proxy or docker network.
     mcp = FastMCP(
         name="duo-mcp",
+        instructions=(
+            "Cisco Duo is a multi-factor authentication (MFA) and zero-trust "
+            "access platform. This server exposes Duo's Admin API for MFA "
+            "synchronization, user pre-enrollment, and enrollment-push "
+            "verification against a customer's Duo account.\n\n"
+            "Core resources: users (duo_users_*) and the authentication "
+            "factors a user can hold — phones (duo_phones_*), hardware "
+            "tokens (duo_tokens_*), WebAuthn/security-key credentials "
+            "(duo_webauthn_credentials_*) — plus groups (duo_groups_*) used "
+            "to organize users.\n\n"
+            "Typical flows:\n"
+            "- MFA sync: duo_users_retrieve_users / "
+            "duo_users_retrieve_user_by_id to check current state, then "
+            "duo_users_synchronize_user_from_directory to pull the latest "
+            "identity-provider record.\n"
+            "- Pre-enrollment: duo_users_create_user, then associate a "
+            "factor (duo_users_associate_phone_with_user / "
+            "_hardware_token_with_user / _group_with_user), or call "
+            "duo_users_enroll_user for a self-enrollment link. Provision a "
+            "new phone first with duo_phones_create_phone + "
+            "duo_phones_create_activation_code_via_sms.\n"
+            "- Enrollment verification: duo_users_send_verification_push, "
+            "then duo_users_retrieve_verification_push_response to confirm "
+            "completion.\n\n"
+            "Per-user factor listings (duo_users_retrieve_phones_by_user_id, "
+            "etc.) show what's already enrolled. duo_users_delete_user and "
+            "duo_users_disassociate_phone_from_user are destructive — use "
+            "exact IDs, never bulk guesses."
+        ),
         transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
     )
 
