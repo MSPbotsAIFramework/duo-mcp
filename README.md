@@ -162,13 +162,13 @@ need to know which — the client picks the correct transport based on the
 HTTP method automatically, exactly matching the reference implementation's
 behavior.
 
-### HEADER 授权参数说明
+### HEADER authentication parameters
 
-| Header | 类型 | 是否必填 | 默认值 | 枚举值 | 字段描述 | Example |
+| Header | Type | Required | Default | Allowed values | Description | Example |
 |---|---|---|---|---|---|---|
-| `X-Duo-Ikey` | string | 是 | 无 | 无 | Duo Admin API 集成的 Integration Key（用作 HMAC 签名的 Basic Auth 用户名部分） | `X-Duo-Ikey: DIABCDEFGHIJ1234567K` |
-| `X-Duo-Skey` | string | 是 | 无 | 无 | Duo Admin API 集成的 Secret Key（HMAC-SHA512 签名密钥，仅用于当次请求签名计算，不落盘） | `X-Duo-Skey: 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b` |
-| `X-Duo-Api-Host` | string | 是 | 无 | 无 | 该 Duo 账号的 Admin API host（每个账号独立子域名，如 `api-xxxxxxxx.duosecurity.com`），无需带协议前缀 | `X-Duo-Api-Host: api-12345678.duosecurity.com` |
+| `X-Duo-Ikey` | string | Yes | None | None | Integration Key of the Duo Admin API integration (used as the Basic Auth username part of the HMAC signature) | `X-Duo-Ikey: DIABCDEFGHIJ1234567K` |
+| `X-Duo-Skey` | string | Yes | None | None | Secret Key of the Duo Admin API integration (HMAC-SHA512 signing key, used only to compute the signature for the current request, never stored on disk) | `X-Duo-Skey: 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b` |
+| `X-Duo-Api-Host` | string | Yes | None | None | The Admin API host of this Duo account (each account has its own subdomain, such as `api-xxxxxxxx.duosecurity.com`); no protocol prefix needed | `X-Duo-Api-Host: api-12345678.duosecurity.com` |
 
 Missing any header returns `401`:
 ```json
@@ -182,10 +182,10 @@ Missing any header returns `401`:
 
 ## Environment Variables
 
-| Variable | 类型 | 是否必填 | 默认值 | 说明 |
+| Variable | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `MCP_HTTP_PORT` | int | 否 | `8080` | HTTP 监听端口 |
-| `MCP_HTTP_HOST` | string | 否 | `0.0.0.0` | HTTP 监听地址 |
+| `MCP_HTTP_PORT` | int | No | `8080` | HTTP listen port |
+| `MCP_HTTP_HOST` | string | No | `0.0.0.0` | HTTP listen address |
 
 ## MCP Endpoint
 
@@ -237,7 +237,7 @@ The 3 capabilities this task specifically named map to these tools:
 | webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials` | Retrieve WebAuthn Credentials. | GET /admin/v1/webauthncredentials | limit(optional), offset(optional) |
 | webauthn_credentials | `duo_webauthn_credentials_retrieve_web_authn_credentials_by_key` | Retrieve WebAuthn Credentials by Key. | GET /admin/v1/webauthncredentials/[webauthnkey] | webauthnkey(required) |
 
-## 测试示例
+## Test Example
 
 ```bash
 # Health check
