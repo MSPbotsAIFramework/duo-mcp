@@ -4,7 +4,9 @@
     "ac": "AC1",
     "text": "Given the server is started with valid Settings, When tools/list is called, Then the returned tool set includes duo_logs_administrator_logs with no required parameters and readOnlyHint=True",
     "type": "auto",
-    "tests": ["tests/test_tools.py::test_tools_list_snapshot"]
+    "tests": ["tests/test_tools.py::test_tools_list_snapshot"],
+    "result": "pass",
+    "evidence": "uv run pytest tests/test_tools.py::test_tools_list_snapshot -v -> PASSED (commit c3494b9); confirmed live via initialize+tools/list over HTTP with placeholder X-Duo-Ikey/X-Duo-Skey/X-Duo-Api-Host headers against `uv run python -m duo_mcp`: response includes {\"name\":\"duo_logs_administrator_logs\",...,\"inputSchema\":{\"properties\":{\"mintime\":...},\"title\":...} (no \"required\" key => no required params), \"annotations\":{\"readOnlyHint\":true}}"
   },
   {
     "id": "TC2",
@@ -43,7 +45,9 @@
       "tests/test_middleware.py::test_missing_header_returns_401_with_required_headers_listed",
       "tests/test_middleware.py::test_partial_headers_still_returns_401"
     ],
-    "notes": "already covered: these tests exercise the shared GatewayTokenMiddleware, tool-agnostic, automatically cover the new tool"
+    "notes": "already covered: these tests exercise the shared GatewayTokenMiddleware, tool-agnostic, automatically cover the new tool",
+    "result": "pass",
+    "evidence": "uv run pytest -v -> both tests PASSED (commit c3494b9); also confirmed live: POST /mcp with no credential headers -> HTTP 401 {\"error\":\"Missing credentials\",...,\"required_headers\":[\"X-Duo-Ikey\",\"X-Duo-Skey\",\"X-Duo-Api-Host\"]}"
   },
   {
     "id": "TC5",
@@ -51,7 +55,9 @@
     "text": "Given the Duo API returns an error for the administrator-log request, Then the tool returns the same structured error envelope shape (error.code / error.message / error.retryable) every other tool uses",
     "type": "auto",
     "tests": ["tests/test_tools.py::test_error_envelope_mapping"],
-    "notes": "already covered: DuoError.to_envelope() mapping is tool-agnostic, automatically covers the new tool"
+    "notes": "already covered: DuoError.to_envelope() mapping is tool-agnostic, automatically covers the new tool",
+    "result": "pass",
+    "evidence": "uv run pytest tests/test_tools.py::test_error_envelope_mapping -v -> all 9 parametrized cases PASSED (commit c3494b9); duo_logs_administrator_logs uses the same `except DuoError as e: return e.to_envelope()` path as every other tool, no tool-specific error handling added"
   },
   {
     "id": "TC6",
