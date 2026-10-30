@@ -97,7 +97,9 @@ unlike other trimmed vendors in this program, "actual usage" was taken from
 the original ClickUp task's own stated requirement instead of a live API
 config: **MFA synchronization, user pre-enrollment, and enrollment
 validation**. Those 3 capabilities map to the `users` category almost
-entirely, plus the resource types a user's MFA methods reference:
+entirely, plus the resource types a user's MFA methods reference. A fourth
+capability, **admin activity**, was added later by PRD-21225 (the 2026-08-04
+trim's removal of the `Logs` category had left it uncovered):
 
 - **MFA synchronization**: `duo_users_retrieve_users`,
   `duo_users_retrieve_user_by_id`, `duo_users_synchronize_user_from_directory`,
@@ -111,6 +113,9 @@ entirely, plus the resource types a user's MFA methods reference:
   (`duo_phones_create_phone`, `duo_phones_create_activation_code_via_sms`)
 - **Enrollment validation**: `duo_users_send_verification_push` +
   `duo_users_retrieve_verification_push_response`
+- **Admin activity** (PRD-21225): `duo_logs_administrator_logs` — the one log
+  variant purpose-built for "who did what administrative action, and when";
+  re-added from the pre-trim `Logs` category, not a new design
 
 Plus core CRUD/list for the referenced resource types themselves —
 `duo_users_modify_user`, `duo_users_delete_user`,
@@ -124,9 +129,14 @@ Everything else from the original 160-tool build — `Desktop
 Authenticators`, `Bypass Codes` (standalone category; the per-user variant
 under `users` was kept), `Integrations`, `Policies`, `Endpoints`,
 `Registered Devices`, `Passport`, `Administrators`, `Administrative Units`,
-`Logs`, `Trust Monitor`, `Settings`, `Custom Branding`, `Account Info`,
-`Bulk Operations` (15 categories, ~132 tools) — was removed as unrelated to
-the original task's 3 stated capabilities.
+`Logs` (partial — see below), `Trust Monitor`, `Settings`, `Custom
+Branding`, `Account Info`, `Bulk Operations` (15 categories, ~132 tools) —
+was removed as unrelated to the original task's 3 stated capabilities.
+`Logs` is the one exception: PRD-21225 re-added a single tool from it
+(`duo_logs_administrator_logs`) once "admin activity" was named as this
+project's fourth capability; the other 5 log variants (`activity` v2,
+`authentication` v1/v2, `offline_enrollment`, `telephony` v1/v2) remain out
+of scope — see Known Gaps.
 
 **No official Duo MCP exists** — searched GitHub (`duo-mcp`, `"duosecurity"
 mcp`) and both `wyre-technology`/`MSPbotsAI` orgs before building; the only
@@ -201,15 +211,18 @@ fields, e.g. bulk operations, SSO integration config, policy sections) are
 accepted as a generic `dict` — the docstring lists the top-level keys from
 Duo's own example, and the full schema is in the linked API reference.
 
-The 3 capabilities this task specifically named map to these tools:
+The 3 capabilities the original task specifically named map to these tools,
+plus a 4th (admin activity) added by PRD-21225:
 - **MFA synchronization**: `duo_users_retrieve_users`, `duo_users_synchronize_user_from_directory`
 - **User pre-enrollment**: `duo_users_create_user`, `duo_users_enroll_user`
 - **Enrollment validation**: `duo_users_send_verification_push` + `duo_users_retrieve_verification_push_response`
+- **Admin activity**: `duo_logs_administrator_logs`
 
 | Category | Tool | Description | Method + Path | Params |
 |---|---|---|---|---|
 | groups | `duo_groups_get_group_info` | Get Group Info. | GET /admin/v2/groups/{group_id} | group_id(required) |
 | groups | `duo_groups_retrieve_groups` | Retrieve Groups. | GET /admin/v1/groups | limit(optional), offset(optional) |
+| logs | `duo_logs_administrator_logs` | Administrator Logs. | GET /admin/v1/logs/administrator | mintime(optional) |
 | phones | `duo_phones_create_activation_code_via_sms` | Create Activation Code via SMS. | POST /admin/v1/phones/{phone_id}/send_sms_activation | phone_id(required), valid_secs(optional), install(optional), installation_msg(optional), activation_msg(optional) |
 | phones | `duo_phones_create_phone` | Create Phone. | POST /admin/v1/phones | none |
 | phones | `duo_phones_retrieve_phone_by_id` | Retrieve Phone by ID. | GET /admin/v1/phones/{phone_id} | phone_id(required) |
@@ -311,6 +324,15 @@ parsing):
   a removed category is needed later, Duo's own Postman collection (linked
   below) still documents its exact operations and they can be re-added the
   same way the kept tools were generated.
+- **PRD-21225 re-added one tool from the removed `Logs` category**:
+  `duo_logs_administrator_logs` (`GET /admin/v1/logs/administrator`), the
+  variant purpose-built for "admin activity" (the one capability named by
+  that ticket that the 28-tool trim had left uncovered — MFA enrollment and
+  device review were already served). The other 5 log variants
+  (`activity` v2, `authentication` v1/v2, `offline_enrollment`, `telephony`
+  v1/v2) and all 14 other removed categories remain out of scope; if one is
+  needed later, open a new ticket naming the specific capability rather than
+  assuming "logs" or "admin" implies the whole category.
 - Several kept tools still mutate real Duo account data
   (`duo_users_create_user`, `duo_users_delete_user`,
   `duo_users_enroll_user`, `duo_phones_create_phone`, etc.) — treat these

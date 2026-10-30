@@ -110,7 +110,9 @@ def create_mcp_server(settings: Settings) -> FastMCP:
             "Per-user factor listings (duo_users_retrieve_phones_by_user_id, "
             "etc.) show what's already enrolled. duo_users_delete_user and "
             "duo_users_disassociate_phone_from_user are destructive — use "
-            "exact IDs, never bulk guesses."
+            "exact IDs, never bulk guesses.\n\n"
+            "Admin activity: duo_logs_administrator_logs returns who did "
+            "what administrative action and when."
         ),
         transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
         stateless_http=True,
@@ -121,6 +123,7 @@ def create_mcp_server(settings: Settings) -> FastMCP:
 
     from .tools import (
         groups,
+        logs,
         phones,
         tokens,
         users,
@@ -129,6 +132,7 @@ def create_mcp_server(settings: Settings) -> FastMCP:
 
     for mod in (
         groups,
+        logs,
         phones,
         tokens,
         users,
