@@ -15,6 +15,7 @@ from duo_mcp.server import create_mcp_server
 EXPECTED_TOOLS: dict[str, set[str]] = {
     "duo_groups_get_group_info": {"group_id"},
     "duo_groups_retrieve_groups": set(),
+    "duo_logs_administrator_logs": set(),
     "duo_phones_create_activation_code_via_sms": {"phone_id"},
     "duo_phones_create_phone": set(),
     "duo_phones_retrieve_phone_by_id": {"phone_id"},
@@ -46,6 +47,7 @@ EXPECTED_TOOLS: dict[str, set[str]] = {
 READ_ONLY_TOOLS = {
     "duo_groups_get_group_info",
     "duo_groups_retrieve_groups",
+    "duo_logs_administrator_logs",
     "duo_phones_retrieve_phone_by_id",
     "duo_phones_retrieve_phones",
     "duo_tokens_retrieve_hardware_token_by_id",
